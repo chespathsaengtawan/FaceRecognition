@@ -2,8 +2,8 @@
 
 Real-time face recognition system using Python, OpenCV, and face_recognition library.
 
-
 <img src="image/main.png" alt="" width="50%" align="center"/>
+
 ## Features
 
 - Real-time face detection and recognition
