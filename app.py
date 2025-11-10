@@ -1,65 +1,85 @@
 import face_recognition
 import cv2
 import warnings
-import setuptools
+import requests
 import os
 import numpy as np
 import pandas as pd
 from pathlib import Path
 import base64
-import io
+from io import BytesIO
 from PIL import Image
 
 # To avoid pkg_resources deprecation noise, pin setuptools<81 in your requirements (outside this script).
+warnings.filterwarnings("ignore", category=UserWarning, module="pkg_resources")
 warnings.filterwarnings("ignore", category=UserWarning, module="face_recognition_models")
 
-# Load employee data from CSV
-csv_path = "data/emp.csv"
-if not os.path.isfile(csv_path):
-    raise FileNotFoundError(f"{csv_path} not found. Ensure the file exists in data folder.")
+# Load employee data from API
+def load_employees():
+    try:
+        response = requests.get('http://127.0.0.1:5003/employees')
+        if response.status_code == 200:
+            data = response.json()
+            return data.get('data', [])
+        else:
+            raise RuntimeError(f"API request failed with status {response.status_code}")
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch employee data from API: {str(e)}")
 
-# Read employee data
-try:
-    df = pd.read_csv(csv_path)
-    if not all(col in df.columns for col in ['NAME', 'IMAGE_BINARY']):
-        raise ValueError("CSV must contain NAME and IMAGE_BINARY columns")
-except Exception as e:
-    raise RuntimeError(f"Failed to read {csv_path}: {str(e)}")
-
+def cv2_gui_available():
+    try:
+        # some builds expose getBuildInformation; quick string check (non-destructive)
+        info = getattr(cv2, "getBuildInformation", lambda: "")()
+        if "GUI" in info or "GTK" in info or "Win32" in info or "Cocoa" in info:
+            # final test: try to create/destroy a window (catch errors)
+            try:
+                cv2.namedWindow(".__probe__", cv2.WINDOW_NORMAL)
+                cv2.destroyWindow(".__probe__")
+                return True
+            except Exception:
+                return False
+        return False
+    except Exception:
+        return False
+    
 # Initialize face encodings and names
 person_face_encodings = []
 person_face_names = []
 
-# Process each employee
-for _, row in df.iterrows():
-    try:
-        # Decode base64 to image
-        image_data = base64.b64decode(row['IMAGE_BINARY'])
-        image = Image.open(io.BytesIO(image_data))
-        
-        # Convert PIL image to OpenCV format
-        database_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
-        
-        if database_image is None:
-            print(f"Warning: Could not decode image for {row['NAME']}")
-            continue
+# Process each employee from API
+try:
+    employees = load_employees()
+    for employee in employees:
+        try:
+            # Decode base64 to image
+            image_binary = base64.b64decode(employee['IMAGE_BINARY'])
+            image = Image.open(BytesIO(image_binary))
             
-        # Convert to RGB (face_recognition expects RGB)
-        database_image = cv2.cvtColor(database_image, cv2.COLOR_BGR2RGB)
-        
-        # Ensure array is contiguous
-        database_image = np.ascontiguousarray(database_image)
-        
-        # Get face encodings
-        encodings = face_recognition.face_encodings(database_image)
-        if len(encodings) > 0:
-            person_face_encodings.append(encodings[0])
-            person_face_names.append((row['EN'], row['NAME']))
-        else:
-            print(f"Warning: No face found in image for {row['NAME']}")
+            # Convert PIL image to OpenCV format
+            database_image = cv2.cvtColor(np.array(image), cv2.COLOR_RGB2BGR)
             
-    except Exception as e:
-        print(f"Error processing {row['NAME']}: {str(e)}")
+            if database_image is None:
+                print(f"Warning: Could not decode image for {employee['NAME']}")
+                continue
+                
+            # Convert to RGB (face_recognition expects RGB)
+            database_image = cv2.cvtColor(database_image, cv2.COLOR_BGR2RGB)
+            database_image = np.ascontiguousarray(database_image)
+            
+            # Get face encodings
+            encodings = face_recognition.face_encodings(database_image)
+            if len(encodings) > 0:
+                person_face_encodings.append(encodings[0])
+                person_face_names.append((employee['EN'], employee['NAME']))
+            else:
+                print(f"Warning: No face found in image for {employee['NAME']}")
+                
+        except Exception as e:
+            print(f"Error processing {employee.get('NAME', 'Unknown')}: {str(e)}")
+
+except Exception as e:
+    raise RuntimeError(f"Failed to process employee data: {str(e)}")
+
 if not person_face_encodings:
     raise RuntimeError("No valid faces found in employee database")
 
@@ -68,9 +88,28 @@ videoCapture = cv2.VideoCapture(0)
 if not videoCapture.isOpened():
     raise RuntimeError("Unable to open webcam (cv2.VideoCapture returned False).")
 
-# Get screen resolution
-cv2.namedWindow('Video', cv2.WINDOW_NORMAL)
-cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+gui_available = cv2_gui_available()
+if gui_available:
+    try:
+        cv2.namedWindow('Video', cv2.WINDOW_NORMAL)
+        cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+    except Exception:
+        gui_available = False
+
+if not gui_available:
+    # fallback to Tkinter viewer (already in code) — initialize once
+    import tkinter as tk
+    from PIL import ImageTk, Image
+    root = tk.Tk()
+    root.title("Video (Tkinter fallback)")
+    screen_w = root.winfo_screenwidth()
+    screen_h = root.winfo_screenheight()
+    root.geometry(f"{screen_w}x{screen_h}")
+    root.configure(background='black')
+    canvas = tk.Canvas(root, width=screen_w, height=screen_h, highlightthickness=0)
+    canvas.pack()
+    tk_image_id = None
+    _tk_photo = None
 
 data_locations = []
 data_encodings = []
@@ -165,19 +204,65 @@ while True:
 
     # Combine frame with bottom bar
     final_frame = np.vstack([display_frame, bottom_bar])
-    
-    # Show the combined frame
-    cv2.imshow('Video', final_frame)
-    
-    # Press 'x' to exit, 'f' to toggle fullscreen
-    key = cv2.waitKey(1) & 0xFF
-    if key == ord('x'):
-        break
-    elif key == ord('f'):
-        # Toggle fullscreen
-        current_property = cv2.getWindowProperty('Video', cv2.WND_PROP_FULLSCREEN)
-        new_property = cv2.WINDOW_NORMAL if current_property == cv2.WINDOW_FULLSCREEN else cv2.WINDOW_FULLSCREEN
-        cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, new_property)
 
+    if gui_available:
+        # Show the combined frame using OpenCV GUI
+        try:
+            cv2.imshow('Video', final_frame)
+        except Exception as e:
+            # if imshow suddenly fails, switch to fallback
+            print("cv2.imshow failed, switching to Tkinter fallback:", e)
+            gui_available = False
+            # initialize Tk fallback if not already
+            import tkinter as tk
+            from PIL import ImageTk, Image
+            root = tk.Tk()
+            root.title("Video (Tkinter fallback)")
+            screen_w = root.winfo_screenwidth()
+            screen_h = root.winfo_screenheight()
+            root.geometry(f"{screen_w}x{screen_h}")
+            root.configure(background='black')
+            canvas = tk.Canvas(root, width=screen_w, height=screen_h, highlightthickness=0)
+            canvas.pack()
+            tk_image_id = None
+            _tk_photo = None
+
+    if not gui_available:
+        # Convert BGR (OpenCV) to RGB for PIL
+        try:
+            img_rgb = cv2.cvtColor(final_frame, cv2.COLOR_BGR2RGB)
+        except Exception:
+            # if conversion fails, try as-is
+            img_rgb = final_frame
+        pil_img = Image.fromarray(img_rgb)
+        # resize to screen while preserving aspect if necessary
+        pil_img = pil_img.resize((screen_w, screen_h), Image.LANCZOS)
+        _tk_photo = ImageTk.PhotoImage(image=pil_img)
+        if tk_image_id is None:
+            tk_image_id = canvas.create_image(0, 0, anchor='nw', image=_tk_photo)
+        else:
+            canvas.itemconfig(tk_image_id, image=_tk_photo)
+        # process tkinter events; if window closed, exit loop
+        try:
+            root.update_idletasks()
+            root.update()
+        except tk.TclError:
+            break
+
+    # Press 'x' to exit, 'f' to toggle fullscreen (OpenCV mode only)
+    if gui_available:
+        key = cv2.waitKey(1) & 0xFF
+        if key == ord('x'):
+            break
+        elif key == ord('f'):
+            current_property = cv2.getWindowProperty('Video', cv2.WND_PROP_FULLSCREEN)
+            new_property = cv2.WINDOW_NORMAL if current_property == cv2.WINDOW_FULLSCREEN else cv2.WINDOW_FULLSCREEN
+            cv2.setWindowProperty('Video', cv2.WND_PROP_FULLSCREEN, new_property)
+# ...existing code...
 videoCapture.release()
+if not gui_available:
+    try:
+        root.destroy()
+    except Exception:
+        pass
 cv2.destroyAllWindows()
