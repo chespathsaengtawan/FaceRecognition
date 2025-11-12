@@ -15,3 +15,7 @@ Thumbs.db
 # Logs and databases
 *.log
 *.sqlite3
+web/.vercel
+web/.venv
+api/.vercel
+api/.venv/
