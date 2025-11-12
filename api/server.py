@@ -37,6 +37,10 @@ def validate_base64(s: str) -> bool:
     except Exception:
         return False
 
+@app.route("/", methods=["GET"])
+def index():
+    return jsonify({"status": "ok", "message": "Welcome to the Employee Management API"})
+
 @app.route("/employees", methods=["GET"])
 def list_employees():
     df = read_df()

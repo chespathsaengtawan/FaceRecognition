@@ -2,9 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+    <meta property="og:title" content="Face Recognition System" />
+    <meta property="og:description" content="ระบบการจดจำใบหน้า (Face Recognition System) เป็นเทคโนโลยีที่ใช้ในการระบุหรือยืนยันตัวตนของบุคคลโดยการวิเคราะห์ลักษณะทางกายภาพของใบหน้า เช่น รูปทรงใบหน้า, ตำแหน่งของดวงตา, จมูก, ปาก และลักษณะเฉพาะอื่น ๆ ที่สามารถแยกแยะบุคคลได้อย่างแม่นยำ" />
+    <meta property="og:image" content="{{ url_for('static', filename='image/1.png') }}" />
+    <meta property="og:url" content="{{ url_for('index', _external=True) }}" />
+    <meta property="og:type" content="website" />
     <title>Face Recognition System</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
   <style>
     .card-stat { min-height: 120px; }
     .stat-number { font-size: 2.25rem; font-weight: 700; }
@@ -15,27 +20,83 @@
       color: white;
       padding: 5px 0;
     }
+
     body {
-      background-color: #f8f9fa;
+      /*background-color: #c6cdd1d8;*/
     }
     .nav-link-menu {
-      color: white !important;
+      /*color: white !important;*/
       font-size: small;
-    }  
+    }
+    .nav-link-menu:hover {
+      text-decoration: underline;
+      text-shadow: 0 26px 60px rgba(0,0,0,0.32),
+      0 10px 30px rgba(0,0,0,0.14),
+      inset 0 1px 0 rgba(255,255,255,0.65);
+    }
+
+  /* ปรับ carousel item ให้มีมุมโค้งและเงาเหมือนตัวอย่างรูป */
+  .carousel-inner {
+    padding: 20px; /* ระยะห่างรอบๆ item */
+    background: transparent;
+  }
+
+  .carousel-item {
+    border-radius: 20px;
+    overflow: hidden; /* ตัดภาพให้โค้งตามกรอบ */
+    background: #fff;
+    /* เงาหลัก (นุ่ม) + เงาเล็กภายใน (inset) เพื่อความลึก */
+
+    transition: transform .25s ease, box-shadow .25s ease;
+  }
+
+  .carousel-item:hover {
+    transform: translateY(-6px);
+    box-shadow:
+      0 26px 60px rgba(0,0,0,0.32),
+      0 10px 30px rgba(0,0,0,0.14),
+      inset 0 1px 0 rgba(255,255,255,0.65);
+  }
+
+  .carousel-item img {
+    display: block;
+    width: 100%;
+    height: auto;
+    object-fit: cover;
+    /* ซ้ำมุมโค้งเพื่อความแน่นอน */
+    border-radius: 20px;
+    -webkit-user-select: none;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  /* ปรับ caption ให้เด่นบนพื้นเงา */
+  .carousel-caption {
+    background-color: rgba(0,0,0,0.45);
+    border-radius: 8px;
+    padding: 12px;
+  }
+
+  /* ปรับตัวควบคุมให้ไม่ทับเงา */
+  .carousel-control-prev-icon,
+  .carousel-control-next-icon {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.35));
+  }
+
   </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark p-0 m-0">
-        <div class="container-fluid p-2">         
-          <ul class="navbar-nav me-auto mb-0 mb-lg-0 gap-1">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light p-0 m-0">
+        <div class="container p-2">    
+          <ul class="me-auto mb-0 gap-2 d-flex list-unstyled">
               <li class="nav-item">
-                  <a class="nav-link ms-2 p-0 nav-link-menu" href="https://www.facebook.com/share/1Bs1BkbMoq/?mibextid=wwXIfr">
+                  <a class="nav-link p-0 nav-link-menu" href="https://www.facebook.com/share/1Bs1BkbMoq/?mibextid=wwXIfr">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-facebook" viewBox="0 0 16 16">
                         <path d="M16 8.049c0-4.446-3.582-8.05-8-8.05C3.58 0-.002 3.603-.002 8.05c0 4.017 2.926 7.347 6.75 7.951v-5.625h-2.03V8.05H6.75V6.275c0-2.017 1.195-3.131 3.022-3.131.876 0 1.791.157 1.791.157v1.98h-1.009c-.993 0-1.303.621-1.303 1.258v1.51h2.218l-.354 2.326H9.25V16c3.824-.604 6.75-3.934 6.75-7.951"/>
                       </svg>                            
                   </a>
               </li>
-              <li class="nav-item"></li>
+              <li class="nav-item">
                   <a class="nav-link p-0 nav-link-menu" href="https://github.com/chespathsaengtawan">
                       <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-github" viewBox="0 0 16 16">
                         <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8"/>
@@ -43,188 +104,127 @@
                   </a>
               </li>
           </ul>
-          <ul class="navbar-nav ms-auto mb-0 mb-lg-0 gap-2">
-              <li class="nav-item">
-                  <a class="nav-link active p-0 nav-link-menu" href="#">รายชื่อพนักงาน</a>
-              </li>
-              <li class="nav-item">
-                  <a class="nav-link active p-0 nav-link-menu" href="#">ตั้งค่าอุปกรณ์</a>
-              </li>
-              <li class="nav-item">
-                  <a class="nav-link active p-0 nav-link-menu" href="#">ประวัติพนักงาน</a>
-              </li>
-              <li class="nav-item">
-                  <a class="nav-link active p-0 nav-link-menu" href="#">เข้าสู่ระบบ</a>
-              </li>
-          </ul>
+
+            <button class="navbar-toggler p-2" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+              <span id="togglerOpenIcon" class="d-inline-flex align-items-center">
+                <!-- open icon (three dots vertical) -->
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M9.5 13a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0m0-5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0"/>
+                </svg>
+              </span>
+            </button>
+          <div class="collapse navbar-collapse" id="navbarSupportedContent">
+            <ul class="navbar-nav ms-auto mb-0 mb-lg-0 gap-2">
+              <!---
+                <li class="nav-item">
+                    <a class="nav-link active p-0 nav-link-menu" href="#">รายชื่อพนักงาน</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active p-0 nav-link-menu" href="#">ตั้งค่าอุปกรณ์</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active p-0 nav-link-menu" href="#">ประวัติพนักงาน</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active p-0 nav-link-menu" href="#">เข้าสู่ระบบ</a>
+                </li>
+              -->
+                <li class="nav-item">
+                    <a class="nav-link active p-0 nav-link-menu" href="https://github.com/chespathsaengtawan">อ่านเพิ่มเติม</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link active p-0 nav-link-menu" href="https://www.facebook.com/share/1Bs1BkbMoq/?mibextid=wwXIfr">ติดต่อเรา</a>
+                </li>
+            </ul>
+          </div>
         </div>
     </nav>
 
-    <div class="header-purple mb-4">
-        <div class="container">   
-          <h3 class="text-center">Face Recognition System</h3>
-          <p class="text-center">ระบบจดจำใบหน้าเพื่อการจัดการพนักงาน</p>
-        </div>
-    </div>
-
-<div class="container my-4">
-  <div class="row g-3 mb-3">
-    <div class="col-12 col-md-4">
-      <div class="card card-stat shadow-sm">
-        <div class="card-body d-flex flex-column justify-content-center">
-          <div class="stat-label">จำนวนพนักงานทั้งหมด</div>
-          <div class="stat-number">{{ total_employees or 0 }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-8">
-      <div class="row g-3">
-        <div class="col-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-label">ชาย</div>
-              <div class="stat-number text-success">{{ male_count or 0 }}</div>
+    <div class="container-fluid p-6">
+      <div class="row">
+        <div class="col-md-6 ms-auto">
+          <div id="carouselExampleCaptions" class="carousel slide" data-bs-ride="carousel">
+            <div class="carousel-indicators">
+              <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+              <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="1" aria-label="Slide 2"></button>
+              <button type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide-to="2" aria-label="Slide 3"></button>
             </div>
-          </div>
-        </div>
-        <div class="col-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-label">หญิง</div>
-              <div class="stat-number text-primary">{{ female_count or 0 }}</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-4">
-          <div class="card shadow-sm">
-            <div class="card-body text-center">
-              <div class="stat-label">LGBTQ+</div>
-              <div class="stat-number text-warning">{{ lgbtq_count or 0 }}</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Active every 12 hours -->
-  <div class="row g-3 mb-3">
-    <div class="col-12 col-md-4">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <div class="stat-label">พนักงานที่ใช้งานทุก 12 ชั่วโมง (รวม)</div>
-          <div class="stat-number">{{ active_12h_total or 0 }}</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-md-8">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <div class="row align-items-center">
-            <div class="col-12 col-md-4 text-center">
-              <div class="stat-label">ชาย (12 ชม.)</div>
-              <div class="stat-number text-success">{{ active_12h_male or 0 }}</div>
-            </div>
-            <div class="col-12 col-md-4 text-center">
-              <div class="stat-label">หญิง (12 ชม.)</div>
-              <div class="stat-number text-primary">{{ active_12h_female or 0 }}</div>
-            </div>
-            <div class="col-12 col-md-4 text-center">
-              <div class="stat-label">LGBTQ+ (12 ชม.)</div>
-              <div class="stat-number text-warning">{{ active_12h_lgbtq or 0 }}</div>
-            </div>
-          </div>
-          <hr>
-          <!-- optional progress visualization -->
-          <div class="row text-center">
-            <div class="col">
-              <div class="small mb-1">สัดส่วนชาย</div>
-              <div class="progress" style="height:12px;">
-                <div class="progress-bar bg-success" role="progressbar" style="width: {{ perc_active_male or 0 }}%" aria-valuenow="{{ perc_active_male or 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+            <div class="carousel-inner">
+              <div class="carousel-item active">
+                <img src="{{ url_for('static', filename='image/1.png') }}" class="d-block w-100" alt="...">
+                <div class="carousel-caption d-none d-md-block">
+                  <h5>วิธีการพิสูจน์ตัวตนด้วยข้อมูลชีวภาพ</h5>
+                  <p>คือเทคนิคการยืนยันตัวตนโดยใช้ลักษณะทางกายภาพหรือพฤติกรรมที่เป็นเอกลักษณ์ของบุคคล ซึ่งยากต่อการปลอมแปลงหรือเลียนแบบ</p>
+                </div>
+              </div>
+              <div class="carousel-item">
+                <img src="{{ url_for('static', filename='image/2.png') }}" class="d-block w-100" alt="...">
+                <div class="carousel-caption d-none d-md-block">
+                  <h5>การนำเทคโนโลยีมาใช้พิสูจน์ตัวตน</h5>
+                  <p>แนวคิดการจัดการและออกแบบสำนักงานโดยใช้เทคโนโลยีดิจิทัลและ IoT เพื่อเพิ่มประสิทธิภาพการทำงาน ความสะดวกสบาย และ ความปลอดภัยของผู้ใช้งานในพื้นที่</p>
+                </div>
+              </div>
+              <div class="carousel-item">
+                 <img src="{{ url_for('static', filename='image/3.png') }}" class="d-block w-100" alt="...">
+                <div class="carousel-caption d-none d-md-block">
+                  <h5>
+                    ใช้วิเคราะห์ข้อมูลบุคคล
+                  </h5>
+                  <p>วิเคราะห์ อายุ, เพศ, จำนวน, พฤติกรรม, สุขภาพ  </p>
+                </div>
               </div>
             </div>
-            <div class="col">
-              <div class="small mb-1">สัดส่วนหญิง</div>
-              <div class="progress" style="height:12px;">
-                <div class="progress-bar bg-primary" role="progressbar" style="width: '{{ perc_active_female or 0 }}%'" aria-valuenow="{{ perc_active_female or 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
-              </div>
-            </div>
-            <div class="col">
-              <div class="small mb-1">สัดส่วน LGBTQ+</div>
-              <div class="progress" style="height:12px;">
-                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ perc_active_lgbtq or 0 }}%" aria-valuenow="{{ perc_active_lgbtq or 0 }}" aria-valuemin="0" aria-valuemax="100"></div>
+            <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Previous</span>
+            </button>
+            <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleCaptions" data-bs-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="visually-hidden">Next</span>
+            </button>
+          </div>
+        </div>
+        <div class="col-md-4 me-auto">
+          <div class="d-flex justify-content-center align-items-center mt-4 ">
+            <div class="w-100 p-4 bg-white rounded-4">
+              <h1 class="text-center">ระบบการจดจำใบหน้า</h1>
+              <h2 class="text-center">[Face Recognition System]</h2>
+              <hr>
+              <p class="mt-3 mb-4 h5">&nbsp;&nbsp;&nbsp; ระบบการจดจำใบหน้า (Face Recognition System) เป็นเทคโนโลยีที่ใช้ในการระบุหรือยืนยันตัวตนของบุคคลโดยการวิเคราะห์ลักษณะทางกายภาพของใบหน้า เช่น รูปทรงใบหน้า, ตำแหน่งของดวงตา, จมูก, ปาก และลักษณะเฉพาะอื่น ๆ ที่สามารถแยกแยะบุคคลได้อย่างแม่นยำ ระบบนี้มักถูกนำมาใช้ในหลากหลายด้าน เช่น การรักษาความปลอดภัย, การเข้าถึงข้อมูลส่วนบุคคล, การตรวจสอบตัวตนในสถานที่ทำงาน และการติดตามพฤติกรรมของผู้คนในพื้นที่สาธารณะ</p>     </p>            
+            
+              <div class="d-flex gap-2 justify-content-end bottom-0">
+                <a href="https://github.com/chespathsaengtawan" class="btn btn-primary mt-3">อ่านเพิ่มเติม</a>
+                <a href="https://www.facebook.com/share/1Bs1BkbMoq/?mibextid=wwXIfr" class="btn btn-danger mt-3">ติดต่อเรา</a>
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Missing name count -->
-  <div class="row g-3">
-    <div class="col-12 col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-body d-flex justify-content-between align-items-center">
-          <div>
-            <div class="stat-label">จำนวนครั้งพนักงานที่ไม่มีชื่อในระบบ</div>
-            <div class="stat-number text-danger">{{ unknown_name_count or 0 }}</div>
-          </div>
-          <div class="text-muted small">ข้อมูลอัปเดต: {{ last_updated or "-" }}</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- breakdown table -->
-    <div class="col-12 col-md-6">
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h6>สถิติย่อย</h6>
-          <table class="table table-sm">
-            <thead>
-              <tr>
-                <th>ประเภท</th>
-                <th class="text-end">จำนวน</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>ทั้งหมด</td>
-                <td class="text-end">{{ total_employees or 0 }}</td>
-              </tr>
-              <tr>
-                <td>ชาย</td>
-                <td class="text-end">{{ male_count or 0 }}</td>
-              </tr>
-              <tr>
-                <td>หญิง</td>
-                <td class="text-end">{{ female_count or 0 }}</td>
-              </tr>
-              <tr>
-                <td>LGBTQ+</td>
-                <td class="text-end">{{ lgbtq_count or 0 }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- optional actions -->
-  <div class="row mt-3">
-    <div class="col text-end">
-      <a href="/" class="btn btn-outline-secondary">กลับหน้าหลัก</a>
-      <button class="btn btn-primary" id="refreshBtn">รีเฟรช</button>
-    </div>
-  </div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
 <script>
-  document.getElementById('refreshBtn').addEventListener('click', () => location.reload());
+  (function(){
+    const collapseEl = document.getElementById('navbarSupportedContent');
+    const openIcon = document.getElementById('togglerOpenIcon');
+    const closeIcon = document.getElementById('togglerCloseIcon');
+    if (collapseEl && openIcon && closeIcon) {
+      collapseEl.addEventListener('show.bs.collapse', () => {
+        openIcon.style.display = 'none';
+        closeIcon.style.display = 'inline-flex';
+      });
+      collapseEl.addEventListener('hide.bs.collapse', () => {
+        openIcon.style.display = 'inline-flex';
+        closeIcon.style.display = 'none';
+      });
+      // sync initial state (in case collapsed state differs)
+      if (collapseEl.classList.contains('show')) {
+        openIcon.style.display = 'none';
+        closeIcon.style.display = 'inline-flex';
+      }
+    }
+  })();
 </script>
 </body>
 </html>
