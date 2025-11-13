@@ -8,16 +8,20 @@ import pandas as pd
 from pathlib import Path
 import base64
 from io import BytesIO
-from PIL import Image
+from PIL import ImageTk, Image
+import tkinter as tk
 
 # To avoid pkg_resources deprecation noise, pin setuptools<81 in your requirements (outside this script).
 warnings.filterwarnings("ignore", category=UserWarning, module="pkg_resources")
 warnings.filterwarnings("ignore", category=UserWarning, module="face_recognition_models")
 
+# API configuration
+API_BASE_URL = 'https://api-face-recognition-chi.vercel.app'
+
 # Load employee data from API
 def load_employees():
     try:
-        response = requests.get('http://127.0.0.1:5003/employees')
+        response = requests.get(f'{API_BASE_URL}/employees')
         if response.status_code == 200:
             data = response.json()
             return data.get('data', [])
@@ -213,9 +217,7 @@ while True:
             # if imshow suddenly fails, switch to fallback
             print("cv2.imshow failed, switching to Tkinter fallback:", e)
             gui_available = False
-            # initialize Tk fallback if not already
-            import tkinter as tk
-            from PIL import ImageTk, Image
+
             root = tk.Tk()
             root.title("Video (Tkinter fallback)")
             screen_w = root.winfo_screenwidth()

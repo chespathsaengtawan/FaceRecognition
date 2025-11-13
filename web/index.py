@@ -7,7 +7,7 @@ app = Flask(__name__, template_folder=str(Path(__file__).parent / "templates")) 
 
 
 # API configuration
-API_BASE_URL = 'http://127.0.0.1:5003'
+API_BASE_URL = 'https://api-face-recognition-chi.vercel.app'
 
 def get_employees():
     """Fetch employees from the API"""

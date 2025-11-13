@@ -4,8 +4,8 @@ __pycache__/
 *.pyd
 *.pyo
 # Virtual environment
-menv/
-.menv/
+
+.venv/
 # Editor/IDE specific files
 .vscode/
 .idea/
@@ -15,7 +15,7 @@ Thumbs.db
 # Logs and databases
 *.log
 *.sqlite3
-web/.vercel
-web/.venv
-api/.vercel
+web/.vercel/
+web/.venv/
+api/.vercel/
 api/.venv/
