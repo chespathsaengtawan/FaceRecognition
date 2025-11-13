@@ -1,5 +1,5 @@
 from pathlib import Path
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify 
 import requests
 from urllib.parse import urljoin
 

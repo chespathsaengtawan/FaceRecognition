@@ -2,8 +2,12 @@
 
 Real-time face recognition system using Python, OpenCV, and face_recognition library.
 
-<img src="image/main.png" alt="" width="50%" align="center"/>
+<img src="main.png" alt="" width="50%" align="center"/>
 
+## Production :
+   API : https://api-face-recognition-chi.vercel.app
+   WEB : https://web-face-recognition.vercel.app
+   
 ## Features
 
 - Real-time face detection and recognition

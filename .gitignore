@@ -3,8 +3,9 @@ __pycache__/
 *.pyc
 *.pyd
 *.pyo
-# Virtual environment
 
+.github/
+# Virtual environment
 .venv/
 # Editor/IDE specific files
 .vscode/
